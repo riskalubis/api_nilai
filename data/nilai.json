@@ -25,5 +25,14 @@
         "nilai": 80,
         "keterangan": "Lulus",
         "grade": "B"
+    },
+    {
+        "id": 4,
+        "nim": "2023020350",
+        "nama": "Riska Lubis",
+        "mata_kuliah": "Basis Data",
+        "nilai": 95,
+        "keterangan": "Lulus",
+        "grade": "A"
     }
 ]

@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+```
+<title>Data Nilai Mahasiswa</title>
+
+<style>
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        margin: 0;
+        padding: 30px;
+        font-family: Arial, sans-serif;
+        background: #f4f6f8;
+        color: #222;
+    }
+
+    .container {
+        max-width: 1000px;
+        margin: auto;
+        background: white;
+        padding: 30px;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    }
+
+    h1 {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+    form {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+
+    input {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        font-size: 14px;
+    }
+
+    button {
+        grid-column: 1 / -1;
+        padding: 12px;
+        border: none;
+        border-radius: 6px;
+        background: #222;
+        color: white;
+        font-size: 15px;
+        cursor: pointer;
+    }
+
+    button:hover {
+        background: #444;
+    }
+
+    .message {
+        display: none;
+        margin-bottom: 20px;
+        padding: 12px;
+        border-radius: 6px;
+    }
+
+    .filter {
+        margin-bottom: 20px;
+    }
+
+    .filter select {
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        margin-left: 8px;
+    }
+
+    .table-wrapper {
+        overflow-x: auto;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    th,
+    td {
+        padding: 12px;
+        border: 1px solid #ddd;
+        text-align: center;
+    }
+
+    th {
+        background: #eee;
+    }
+
+    @media (max-width: 600px) {
+        body {
+            padding: 15px;
+        }
+
+        .container {
+            padding: 20px;
+        }
+
+        form {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+```
+
+</head>
+
+<body>
+
+<div class="container">
+
+```
+<h1>Data Nilai Mahasiswa</h1>
+
+<!-- FORM TAMBAH DATA -->
+<form id="nilaiForm">
+
+    <input
+        type="text"
+        id="nim"
+        placeholder="NIM (10 digit)"
+        maxlength="10"
+        inputmode="numeric"
+        required
+    >
+
+    <input
+        type="text"
+        id="nama"
+        placeholder="Nama Mahasiswa"
+        required
+    >
+
+    <input
+        type="text"
+        id="mata_kuliah"
+        placeholder="Mata Kuliah"
+        required
+    >
+
+    <input
+        type="number"
+        id="nilai"
+        placeholder="Nilai (0-100)"
+        min="0"
+        max="100"
+        required
+    >
+
+    <button type="submit">
+        Tambah Data
+    </button>
+
+</form>
+
+<!-- PESAN -->
+<div id="message" class="message"></div>
+
+<!-- FILTER -->
+<div class="filter">
+
+    <label for="filter">
+        Filter Keterangan:
+    </label>
+
+    <select id="filter">
+
+        <option value="">
+            Semua
+        </option>
+
+        <option value="Lulus">
+            Lulus
+        </option>
+
+        <option value="Tidak Lulus">
+            Tidak Lulus
+        </option>
+
+    </select>
+
+</div>
+
+<!-- TABEL -->
+<div class="table-wrapper">
+
+    <table>
+
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>NIM</th>
+                <th>Nama</th>
+                <th>Mata Kuliah</th>
+                <th>Nilai</th>
+                <th>Keterangan</th>
+                <th>Grade</th>
+            </tr>
+        </thead>
+
+        <tbody id="dataNilai">
+
+            <tr>
+                <td colspan="7">
+                    Memuat data...
+                </td>
+            </tr>
+
+        </tbody>
+
+    </table>
+
+</div>
+```
+
+</div>
+
+<script>
+
+/* =========================
+   URL API
+========================= */
+
+const API = "/api/nilai";
+
+
+/* =========================
+   PESAN
+========================= */
+
+function showMessage(message, success = true) {
+
+    const element = document.getElementById("message");
+
+    element.textContent = message;
+
+    element.style.display = "block";
+
+    if (success) {
+        element.style.background = "#d4edda";
+        element.style.color = "#155724";
+    } else {
+        element.style.background = "#f8d7da";
+        element.style.color = "#721c24";
+    }
+
+    setTimeout(() => {
+        element.style.display = "none";
+    }, 3000);
+}
+
+
+/* =========================
+   LOAD DATA
+========================= */
+
+async function loadData() {
+
+    const tbody = document.getElementById("dataNilai");
+
+    try {
+
+        const filter =
+            document.getElementById("filter").value;
+
+        let url = API;
+
+        if (filter !== "") {
+            url += "?keterangan=" +
+                encodeURIComponent(filter);
+        }
+
+        const response = await fetch(url);
+
+        if (!response.ok) {
+            throw new Error("API Error");
+        }
+
+        const result = await response.json();
+
+        tbody.innerHTML = "";
+
+        if (
+            !result.data ||
+            result.data.length === 0
+        ) {
+
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7">
+                        Belum ada data
+                    </td>
+                </tr>
+            `;
+
+            return;
+        }
+
+
+        result.data.forEach(item => {
+
+            tbody.innerHTML += `
+                <tr>
+                    <td>${item.id}</td>
+                    <td>${item.nim}</td>
+                    <td>${item.nama}</td>
+                    <td>${item.mata_kuliah}</td>
+                    <td>${item.nilai}</td>
+                    <td>${item.keterangan}</td>
+                    <td>${item.grade}</td>
+                </tr>
+            `;
+
+        });
+
+    } catch (error) {
+
+        console.error(error);
+
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="7">
+                    Gagal mengambil data dari API
+                </td>
+            </tr>
+        `;
+
+    }
+}
+
+
+/* =========================
+   POST DATA
+========================= */
+
+document
+    .getElementById("nilaiForm")
+    .addEventListener("submit", async function(event) {
+
+        event.preventDefault();
+
+
+        const nim =
+            document.getElementById("nim")
+                .value
+                .trim();
+
+        const nama =
+            document.getElementById("nama")
+                .value
+                .trim();
+
+        const mataKuliah =
+            document.getElementById("mata_kuliah")
+                .value
+                .trim();
+
+        const nilai =
+            Number(
+                document.getElementById("nilai").value
+            );
+
+
+        /* Validasi NIM 10 digit */
+
+        if (!/^[0-9]{10}$/.test(nim)) {
+
+            showMessage(
+                "NIM harus tepat 10 digit angka",
+                false
+            );
+
+            return;
+        }
+
+
+        /* Validasi nilai */
+
+        if (nilai < 0 || nilai > 100) {
+
+            showMessage(
+                "Nilai harus antara 0 sampai 100",
+                false
+            );
+
+            return;
+        }
+
+
+        const data = {
+
+            nim: nim,
+
+            nama: nama,
+
+            mata_kuliah: mataKuliah,
+
+            nilai: nilai
+
+        };
+
+
+        try {
+
+            const response =
+                await fetch(API, {
+
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body:
+                        JSON.stringify(data)
+
+                });
+
+
+            const result =
+                await response.json();
+
+
+            if (
+                response.ok &&
+                result.status === "success"
+            ) {
+
+                showMessage(
+                    "Data berhasil ditambahkan"
+                );
+
+                document
+                    .getElementById("nilaiForm")
+                    .reset();
+
+                loadData();
+
+            } else {
+
+                showMessage(
+                    result.message ||
+                    "Gagal menambahkan data",
+                    false
+                );
+
+            }
+
+        } catch (error) {
+
+            console.error(error);
+
+            showMessage(
+                "Tidak dapat terhubung ke API",
+                false
+            );
+
+        }
+
+    });
+
+
+/* =========================
+   FILTER
+========================= */
+
+document
+    .getElementById("filter")
+    .addEventListener(
+        "change",
+        loadData
+    );
+
+
+/* =========================
+   LOAD PERTAMA
+========================= */
+
+loadData();
+
+</script>
+
+</body>
+</html>
