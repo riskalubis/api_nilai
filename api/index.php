@@ -2,7 +2,7 @@
 
 header('Content-Type: application/json; charset=utf-8');
 
-$dataFile = __DIR__ . '/data/nilai.json';
+$dataFile = dirname(__DIR__) . '/data/nilai.json';
 
 
 // ======================================================
